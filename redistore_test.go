@@ -71,7 +71,7 @@ type FlashMessage struct {
 	Message string
 }
 
-func TestNewRediStore(t *testing.T) {
+func TestNewRediStoreRoundOne(t *testing.T) {
 	var req *http.Request
 	var rsp *ResponseRecorder
 	var hdr http.Header
@@ -124,16 +124,16 @@ func TestNewRediStore(t *testing.T) {
 	hdr = rsp.Header()
 	cookies, ok = hdr["Set-Cookie"]
 	if !ok || len(cookies) != 1 {
-		t.Fatalf("No cookies. Header:", hdr)
+		t.Fatalf("No cookies. Header: %v", hdr)
 	}
 }
 
 func TestNewRediStoreTwo(t *testing.T) {
 	var req *http.Request
 	var rsp *ResponseRecorder
-	//var hdr http.Header
+	var hdr http.Header
 	var err error
-	//var ok bool
+	var ok bool
 	var cookies []string
 	var session *sessions.Session
 	var flashes []interface{}
@@ -157,15 +157,16 @@ func TestNewRediStoreTwo(t *testing.T) {
 		t.Fatal(err.Error())
 	}
 	//	defer store.Close()
-
+	rsp = NewRecorder()
+	hdr = rsp.Header()
+	cookies, ok = hdr["Set-Cookie"]
+	if !ok || len(cookies) != 1 {
+		t.Fatalf("No cookies. Header: %v", hdr)
+	}
 	req, _ = http.NewRequest("GET", "http://localhost:8080/", nil)
 	req.Header.Add("Cookie", cookies[0])
 	rsp = NewRecorder()
-	// Get a session.
-	//	if session, err = store.Get(req, "session-key"); err != nil {
-	//		t.Fatalf("Error getting session: %v", err)
-	//	}
-	// Check all saved values.
+
 	flashes = session.Flashes()
 	if len(flashes) != 2 {
 		t.Fatalf("Expected flashes; Got %v", flashes)
@@ -232,7 +233,7 @@ func TestNewRediStoreTwo(t *testing.T) {
 // 	rsp = NewRecorder()
 // 	// Get a session.
 // 	if session, err = store.Get(req, "session-key"); err != nil {
-// 		t.Fatalf("Error getting session: %v", err)
+// 		t.Fatalf("Error getting session L238: %v", err)
 // 	}
 // 	// Get a flash.
 // 	flashes = session.Flashes()
@@ -246,12 +247,12 @@ func TestNewRediStoreTwo(t *testing.T) {
 // 	session.AddFlash("baz", "custom_key")
 // 	// Save.
 // 	if err = session.Save(req, rsp); err != nil {
-// 		t.Fatalf("Error saving session: %v", err)
+// 		t.Fatalf("Error saving session L252: %v", err)
 // 	}
 // 	hdr = rsp.Header()
 // 	cookies, ok = hdr["Set-Cookie"]
 // 	if !ok || len(cookies) != 1 {
-// 		t.Fatalf("No cookies. Header:", hdr)
+// 		t.Fatalf("No cookies. Header: %v", hdr)
 // 	}
 
 // 	// Round 2 ----------------------------------------------------------------
@@ -291,8 +292,8 @@ func TestNewRediStoreTwo(t *testing.T) {
 // 	// Set MaxAge to -1 to mark for deletion.
 // 	session.Options.MaxAge = -1
 // 	// Save.
-// 	if err = sessions.Save(req, rsp); err != nil {
-// 		t.Fatalf("Error saving session: %v", err)
+// 	if err = session.Save(req, rsp); err != nil {
+// 		t.Fatalf("Error saving session L298: %v", err)
 // 	}
 
 // 	// Round 3 ----------------------------------------------------------------
@@ -319,7 +320,7 @@ func TestNewRediStoreTwo(t *testing.T) {
 // 	// Add some flashes.
 // 	session.AddFlash(&FlashMessage{42, "foo"})
 // 	// Save.
-// 	if err = sessions.Save(req, rsp); err != nil {
+// 	if err = session.Save(req, rsp); err != nil {
 // 		t.Fatalf("Error saving session: %v", err)
 // 	}
 // 	hdr = rsp.Header()
@@ -352,36 +353,11 @@ func TestNewRediStoreTwo(t *testing.T) {
 // 	// Set MaxAge to -1 to mark for deletion.
 // 	session.Options.MaxAge = -1
 // 	// Save.
-// 	if err = sessions.Save(req, rsp); err != nil {
+// 	if err = session.Save(req, rsp); err != nil {
 // 		t.Fatalf("Error saving session: %v", err)
 // 	}
 
 // 	// Round 5 ----------------------------------------------------------------
-// 	// RediStore Delete session (deprecated)
-
-// 	//req, _ = http.NewRequest("GET", "http://localhost:8080/", nil)
-// 	//req.Header.Add("Cookie", cookies[0])
-// 	//rsp = NewRecorder()
-// 	//// Get a session.
-// 	//if session, err = store.Get(req, "session-key"); err != nil {
-// 	//	t.Fatalf("Error getting session: %v", err)
-// 	//}
-// 	//// Delete session.
-// 	//if err = store.Delete(req, rsp, session); err != nil {
-// 	//	t.Fatalf("Error deleting session: %v", err)
-// 	//}
-// 	//// Get a flash.
-// 	//flashes = session.Flashes()
-// 	//if len(flashes) != 0 {
-// 	//	t.Errorf("Expected empty flashes; Got %v", flashes)
-// 	//}
-// 	//hdr = rsp.Header()
-// 	//cookies, ok = hdr["Set-Cookie"]
-// 	//if !ok || len(cookies) != 1 {
-// 	//	t.Fatalf("No cookies. Header:", hdr)
-// 	//}
-
-// 	// Round 6 ----------------------------------------------------------------
 // 	// RediStore change MaxLength of session
 
 // 	store, err = NewRediStore(10, "tcp", ":6379", "", []byte("secret-key"))
@@ -407,7 +383,7 @@ func TestNewRediStoreTwo(t *testing.T) {
 // 		t.Fatal("failed to Save:", err)
 // 	}
 
-// 	// Round 7 ----------------------------------------------------------------
+// 	// Round 6 ----------------------------------------------------------------
 
 // 	// RedisStoreWithDB
 // 	store, err = NewRediStoreWithDB(10, "tcp", ":6379", "", "1", []byte("secret-key"))
@@ -430,7 +406,7 @@ func TestNewRediStoreTwo(t *testing.T) {
 // 	// Add some flashes.
 // 	session.AddFlash("foo")
 // 	// Save.
-// 	if err = sessions.Save(req, rsp); err != nil {
+// 	if err = session.Save(req, rsp); err != nil {
 // 		t.Fatalf("Error saving session: %v", err)
 // 	}
 // 	hdr = rsp.Header()
@@ -453,7 +429,7 @@ func TestNewRediStoreTwo(t *testing.T) {
 // 		t.Errorf("Expected foo,bar; Got %v", flashes)
 // 	}
 
-// 	// Round 8 ----------------------------------------------------------------
+// 	// Round 7 ----------------------------------------------------------------
 // 	// JSONSerializer
 
 // 	// RedisStore
@@ -478,13 +454,13 @@ func TestNewRediStoreTwo(t *testing.T) {
 // 	// Add some flashes.
 // 	session.AddFlash("foo")
 // 	// Save.
-// 	if err = sessions.Save(req, rsp); err != nil {
+// 	if err = session.Save(req, rsp); err != nil {
 // 		t.Fatalf("Error saving session: %v", err)
 // 	}
 // 	hdr = rsp.Header()
 // 	cookies, ok = hdr["Set-Cookie"]
 // 	if !ok || len(cookies) != 1 {
-// 		t.Fatalf("No cookies. Header:", hdr)
+// 		t.Fatalf("No cookies. Header: %v", hdr)
 // 	}
 
 // 	// Get a session.
