@@ -99,7 +99,7 @@ func TestNewRediStoreRoundOne(t *testing.T) {
 	if err != nil {
 		t.Fatal(err.Error())
 	}
-	//	defer store.Close()
+	defer store.Close()
 
 	req, _ = http.NewRequest("GET", "http://localhost:8080/", nil)
 	rsp = NewRecorder()
@@ -131,10 +131,10 @@ func TestNewRediStoreRoundOne(t *testing.T) {
 func TestNewRediStoreTwo(t *testing.T) {
 	var req *http.Request
 	var rsp *ResponseRecorder
-	var hdr http.Header
+	//var hdr http.Header
 	var err error
-	var ok bool
-	var cookies []string
+	//var ok bool
+	//var cookies []string
 	var session *sessions.Session
 	var flashes []interface{}
 
@@ -156,16 +156,25 @@ func TestNewRediStoreTwo(t *testing.T) {
 	if err != nil {
 		t.Fatal(err.Error())
 	}
-	//	defer store.Close()
+	defer store.Close()
 	rsp = NewRecorder()
-	hdr = rsp.Header()
-	cookies, ok = hdr["Set-Cookie"]
-	if !ok || len(cookies) != 1 {
-		t.Fatalf("No cookies. Header: %v", hdr)
-	}
+	//hdr = rsp.Header()
+	// cookies, ok = hdr["Set-Cookie"]
+	// if !ok || len(cookies) != 1 {
+	// 	t.Fatalf("No cookies. Header: %v", hdr)
+	// }
 	req, _ = http.NewRequest("GET", "http://localhost:8080/", nil)
-	req.Header.Add("Cookie", cookies[0])
-	rsp = NewRecorder()
+	//req.Header.Add("Cookie", cookies[0])
+	//rsp = NewRecorder()
+
+	if session, err = store.Get(req, "session-key"); err != nil {
+		t.Fatalf("Error getting session: %v", err)
+	}
+
+	session.AddFlash("foo")
+	session.AddFlash("bar")
+	// Custom key.
+	session.AddFlash("baz", "custom_key")
 
 	flashes = session.Flashes()
 	if len(flashes) != 2 {
