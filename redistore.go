@@ -11,7 +11,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -19,6 +18,7 @@ import (
 
 	"github.com/gorilla/securecookie"
 	"github.com/gorilla/sessions"
+	"github.com/inconshreveable/log15"
 	"gopkg.in/redis.v5"
 )
 
@@ -267,7 +267,7 @@ func (s *RediStore) Save(r *http.Request, w http.ResponseWriter, session *sessio
 		}
 
 		if err := s.save(session); err != nil {
-			log.Fatalf("Could not save session: %v", err)
+			log15.Error("Could not save session", "Error", err)
 		}
 		encoded, err := securecookie.EncodeMulti(session.Name(), session.ID, s.Codecs...)
 		if err != nil {
